@@ -1,0 +1,36 @@
+name: hSpawn
+main: no.hon95.bukkit.hspawn.HSpawnPlugin
+version: 1.0
+author: HON95
+description: Group specific spawn points.
+softdepend: [PermissionsEx]
+commands:
+    spawn:
+        description: Teleport to spawn.
+permissions:
+    hspawn.*:
+        description: All hSpawn permissions.
+        default: op
+        children:
+          hspawn.command.*: true
+    hspawn.command.*:
+        description: All hSpawn command permissions.
+        children:
+          hspawn.command.spawn: true
+          hspawn.command.spawnothers: true
+          hspawn.command.setspawn: true
+          hspawn.command.removespawn: true
+          hspawn.command.reload: true
+          hspawn.command.help: true
+    hspawn.command.spawn:
+        description: For spawn command.
+    hspawn.command.spawnothers:
+        description: For spawn command.
+    hspawn.command.setspawn:
+        description: For spawn set command.
+    hspawn.command.removespawn:
+        description: For spawn remove command.
+    hspawn.command.reload:
+        description: For spawn reload command.
+    hspawn.command.help:
+        description: For spawn help command.

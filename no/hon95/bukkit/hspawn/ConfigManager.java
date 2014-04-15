@@ -79,6 +79,8 @@ public final class ConfigManager {
 	}
 
 	public void reload() {
+		loadConfig();
+		loadSpawnsConfig();
 		gWorlds.clear();
 		for (World world : Bukkit.getWorlds())
 			loadSpawnsForWorld(world, false);
@@ -118,6 +120,7 @@ public final class ConfigManager {
 		String keyPitch = String.format(KEY_FORMAT, world, group, "pitch");
 		String keyYaw = String.format(KEY_FORMAT, world, group, "yaw");
 		String keyBedRespawn = String.format(KEY_FORMAT, world, group, "bed_respawn");
+		String keyTpToSpawnOnJoin = String.format(KEY_FORMAT, world, group, "tp_to_spawn_on_join");
 
 		if (!gSpawnsConf.isDouble(keyX)) {
 			gSpawnsConf.set(keyX, vanillaSpawn.getX());
@@ -143,6 +146,10 @@ public final class ConfigManager {
 			gSpawnsConf.set(keyBedRespawn, true);
 			gChange = true;
 		}
+		if (!gSpawnsConf.isBoolean(keyTpToSpawnOnJoin)) {
+			gSpawnsConf.set(keyTpToSpawnOnJoin, false);
+			gChange = true;
+		}
 
 		return loadSpawn(world, group, null);
 	}
@@ -154,9 +161,10 @@ public final class ConfigManager {
 		String keyPitch = String.format(KEY_FORMAT, world, group, "pitch");
 		String keyYaw = String.format(KEY_FORMAT, world, group, "yaw");
 		String keyBedRespawn = String.format(KEY_FORMAT, world, group, "bed_respawn");
+		String keyTpToSpawnOnJoin = String.format(KEY_FORMAT, world, group, "tp_to_spawn_on_join");
 		double valX, valY, valZ;
 		float valPitch, valYaw;
-		boolean valBedRespawn;
+		boolean valBedRespawn, valTpToSpawnOnJoin;
 
 		if (gSpawnsConf.isDouble(keyX))
 			valX = gSpawnsConf.getDouble(keyX);
@@ -182,8 +190,12 @@ public final class ConfigManager {
 			valBedRespawn = gSpawnsConf.getBoolean(keyBedRespawn);
 		else
 			valBedRespawn = defSpawn.getBedRespawn();
+		if (gSpawnsConf.isBoolean(keyTpToSpawnOnJoin))
+			valTpToSpawnOnJoin = gSpawnsConf.getBoolean(keyTpToSpawnOnJoin);
+		else
+			valTpToSpawnOnJoin = defSpawn.getTpToSpawnOnJoin();
 
-		return new HSpawn(valX, valY, valZ, valPitch, valYaw, world, valBedRespawn);
+		return new HSpawn(valX, valY, valZ, valPitch, valYaw, world, valBedRespawn, valTpToSpawnOnJoin);
 	}
 
 	public HSpawn getSpawn(Player player) {
@@ -202,7 +214,7 @@ public final class ConfigManager {
 		if (spawn == null)
 			spawn = world.getGroupSpawns().get(DEFAULT_GROUP);
 		if (spawn == null) {
-			gPlugin.getLogger().warning("[BUG] Default spawn not added for world " + worldName);
+			gPlugin.getLogger().warning("[BUG] No spawns found for world " + worldName);
 			return null;
 		}
 

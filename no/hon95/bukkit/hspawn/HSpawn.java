@@ -12,13 +12,19 @@ public final class HSpawn {
 	private float gYaw;
 	private String gWorld;
 	private boolean gBedRespawn;
+	private boolean gTpToSpawnOnJoin;
 	
-	public HSpawn(double x, double y, double z, float pitch, float yaw, String world, boolean bedRespawn) {
+	public HSpawn(double x, double y, double z, float pitch, float yaw, String world) {
+		this(x, y, z, pitch, yaw, world, true, false);
+	}
+	
+	public HSpawn(double x, double y, double z, float pitch, float yaw, String world, boolean bedRespawn, boolean tpToSpwnOnJoin) {
 		gX = x;
 		gY = y;
 		gZ = z;
 		gWorld = world;
 		gBedRespawn = bedRespawn;
+		gTpToSpawnOnJoin = tpToSpwnOnJoin;
 	}
 	
 	public double getX() {
@@ -49,6 +55,10 @@ public final class HSpawn {
 		return gBedRespawn;
 	}
 	
+	public boolean getTpToSpawnOnJoin() {
+		return gTpToSpawnOnJoin;
+	}
+	
 	public void setX(double x) {
 		gX = x;
 	}
@@ -71,6 +81,10 @@ public final class HSpawn {
 	
 	public void setWorld(String world) {
 		gWorld = world;
+	}
+	
+	public void setTpToSpawnOnJoin(boolean tpToSpawnOnJoin) {
+		gTpToSpawnOnJoin = tpToSpawnOnJoin;
 	}
 	
 	public void setBedRespawn(boolean bedRespawn) {

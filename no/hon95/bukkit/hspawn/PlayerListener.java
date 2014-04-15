@@ -1,6 +1,5 @@
 package no.hon95.bukkit.hspawn;
 
-import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -27,11 +26,10 @@ public final class PlayerListener implements Listener {
 
 	@EventHandler
 	public void onEvent(PlayerJoinEvent ev) {
-		if (ev.getPlayer().hasPlayedBefore())
+		HSpawn spawn = gPlugin.getConfigManager().getSpawn(ev.getPlayer());
+		if (ev.getPlayer().hasPlayedBefore() && !spawn.getTpToSpawnOnJoin())
 			return;
-		Location location = gPlugin.getConfigManager().getSpawn(ev.getPlayer()).toLocation();
-		if (location != null)
-			ev.getPlayer().teleport(gPlugin.makeYSafe(location));
+		ev.getPlayer().teleport(gPlugin.makeYSafe(spawn.toLocation()));
 	}
 
 	@EventHandler

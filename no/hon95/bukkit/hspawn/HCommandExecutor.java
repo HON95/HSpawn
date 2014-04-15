@@ -128,7 +128,7 @@ public final class HCommandExecutor implements CommandExecutor {
 	}
 
 	private void setSpawn(CommandSender sender, String group, String world, double x, double y, double z, float pitch, float yaw) {
-		HSpawn spawn = new HSpawn(x, y, z, pitch, yaw, world, true);
+		HSpawn spawn = new HSpawn(x, y, z, pitch, yaw, world);
 		if (gPlugin.getConfigManager().setSpawn(group, spawn))
 			sender.sendMessage(ChatColor.GREEN + "Successfully set spawn for group " + group + " in world " + world + ".");
 		else

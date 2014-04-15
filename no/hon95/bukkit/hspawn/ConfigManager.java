@@ -81,10 +81,15 @@ public final class ConfigManager {
 	public void reload() {
 		gWorlds.clear();
 		for (World world : Bukkit.getWorlds())
-			loadSpawnsForWorld(world);
+			loadSpawnsForWorld(world, false);
+		saveSpawns();
 	}
 
 	public void loadSpawnsForWorld(World world) {
+		loadSpawnsForWorld(world, true);
+	}
+
+	public void loadSpawnsForWorld(World world, boolean save) {
 		if (!gSpawnsConf.isConfigurationSection(world.getName())) {
 			gSpawnsConf.set(world.getName(), null);
 			gChange = true;
@@ -97,6 +102,8 @@ public final class ConfigManager {
 			hworld.getGroupSpawns().put(group, spawn);
 		}
 		gWorlds.put(world.getName(), hworld);
+		if (save)
+			saveSpawns();
 	}
 
 	public void unloadSpawnsForWorld(World world) {
@@ -201,7 +208,7 @@ public final class ConfigManager {
 
 		return spawn;
 	}
-	
+
 	public HSpawn getDefaultSpawn(String world) {
 		return gWorlds.get(world).getGroupSpawns().get(DEFAULT_GROUP);
 	}

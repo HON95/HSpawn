@@ -3,7 +3,7 @@ main: no.hon95.bukkit.hspawn.HSpawnPlugin
 version: 1.0
 author: HON95
 description: Group specific spawn points.
-softdepend: [PermissionsEx]
+softdepend: [Vault]
 commands:
     spawn:
         description: Teleport to spawn.

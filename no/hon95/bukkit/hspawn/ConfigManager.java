@@ -52,12 +52,17 @@ public final class ConfigManager {
 			conf.set("enable", true);
 			change = true;
 		}
+		gPlugin.setEnable(conf.getBoolean("enable"));
 		if (!conf.isBoolean("safe_y")) {
 			conf.set("safe_y", true);
 			change = true;
 		}
-
-		gPlugin.setEnable(conf.getBoolean("enable"));
+		gPlugin.setSafeY(conf.getBoolean("safe_y"));
+		if (!conf.isBoolean("check_for_updates")) {
+			conf.set("check_for_updates", true);
+			change = true;
+		}
+		gPlugin.setCheckForUpdates(conf.getBoolean("check_for_updates"));
 
 		if (change)
 			saveFile(conf, gConfigFile);

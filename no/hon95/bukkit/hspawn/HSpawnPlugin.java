@@ -1,5 +1,6 @@
 package no.hon95.bukkit.hspawn;
 
+import net.gravitydevelopment.updater.Updater;
 import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
@@ -12,11 +13,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class HSpawnPlugin extends JavaPlugin {
 
+	private static final int SERVER_MODS_API_ID = 78173;
+
 	private final ConfigManager gConfigManager = new ConfigManager(this);
 	private final HCommandExecutor gCommandExecutor = new HCommandExecutor(this);
 	private final PlayerListener gPlayerListener = new PlayerListener(this);
 
 	private boolean gEnable = true;
+	private boolean gCheckForUpdates = true;
 	private boolean gSafeY = true;
 	private Permission gPermissionPlugin = null;
 
@@ -37,6 +41,9 @@ public final class HSpawnPlugin extends JavaPlugin {
 
 		getServer().getPluginManager().registerEvents(gPlayerListener, this);
 		getCommand("spawn").setExecutor(gCommandExecutor);
+
+		if (gCheckForUpdates)
+			new Updater(this, SERVER_MODS_API_ID, getFile(), Updater.UpdateType.DEFAULT, false);
 	}
 
 	@Override
@@ -68,6 +75,10 @@ public final class HSpawnPlugin extends JavaPlugin {
 
 	public void setEnable(boolean enable) {
 		gEnable = enable;
+	}
+
+	public void setCheckForUpdates(boolean checkForUpdates) {
+		gCheckForUpdates = checkForUpdates;
 	}
 
 	public void setSafeY(boolean safeY) {

@@ -2,16 +2,18 @@ package no.hon95.bukkit.hspawn;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 
-public final class ConfigManager {
+public final class SpawnManager {
 
 	private static final String DEFAULT_GROUP = "default";
 	private static final String KEY_FORMAT = "%s.%s.%s";
@@ -29,7 +31,7 @@ public final class ConfigManager {
 	private HashMap<String, HWorld> gWorlds = new HashMap<String, HWorld>();
 	boolean gChange = false;
 
-	public ConfigManager(HSpawnPlugin plugin) {
+	public SpawnManager(HSpawnPlugin plugin) {
 		gPlugin = plugin;
 		gConfigFile = new File(gPlugin.getDataFolder(), "config.yml");
 		gSpawnsFile = new File(gPlugin.getDataFolder(), "spawns.yml");
@@ -99,7 +101,10 @@ public final class ConfigManager {
 		HWorld hworld = new HWorld();
 		Location vanillaSpawn = world.getSpawnLocation();
 		HSpawn defSpawn = loadDefaultSpawn(world.getName(), vanillaSpawn);
+		hworld.getGroupSpawns().put(DEFAULT_GROUP, defSpawn);
 		for (String group : gSpawnsConf.getConfigurationSection(world.getName()).getKeys(false)) {
+			if (group.equalsIgnoreCase(DEFAULT_GROUP))
+				continue;
 			HSpawn spawn = loadSpawn(world.getName(), group, defSpawn);
 			hworld.getGroupSpawns().put(group, spawn);
 		}
@@ -119,6 +124,7 @@ public final class ConfigManager {
 		String keyZ = String.format(KEY_FORMAT, world, group, "z");
 		String keyPitch = String.format(KEY_FORMAT, world, group, "pitch");
 		String keyYaw = String.format(KEY_FORMAT, world, group, "yaw");
+		String keySpawnWorld = String.format(KEY_FORMAT, world, group, "spawn_world");
 		String keyBedRespawn = String.format(KEY_FORMAT, world, group, "bed_respawn");
 		String keyTpToSpawnOnJoin = String.format(KEY_FORMAT, world, group, "tp_to_spawn_on_join");
 
@@ -142,6 +148,10 @@ public final class ConfigManager {
 			gSpawnsConf.set(keyYaw, (double) vanillaSpawn.getYaw());
 			gChange = true;
 		}
+		if (!gSpawnsConf.isString(keySpawnWorld)) {
+			gSpawnsConf.set(keySpawnWorld, getAssumedSpawnWorld(world));
+			gChange = true;
+		}
 		if (!gSpawnsConf.isBoolean(keyBedRespawn)) {
 			gSpawnsConf.set(keyBedRespawn, true);
 			gChange = true;
@@ -160,8 +170,10 @@ public final class ConfigManager {
 		String keyZ = String.format(KEY_FORMAT, world, group, "z");
 		String keyPitch = String.format(KEY_FORMAT, world, group, "pitch");
 		String keyYaw = String.format(KEY_FORMAT, world, group, "yaw");
+		String keySpawnWorld = String.format(KEY_FORMAT, world, group, "spawn_world");
 		String keyBedRespawn = String.format(KEY_FORMAT, world, group, "bed_respawn");
 		String keyTpToSpawnOnJoin = String.format(KEY_FORMAT, world, group, "tp_to_spawn_on_join");
+		String valSpawnWorld;
 		double valX, valY, valZ;
 		float valPitch, valYaw;
 		boolean valBedRespawn, valTpToSpawnOnJoin;
@@ -186,6 +198,10 @@ public final class ConfigManager {
 			valYaw = (float) gSpawnsConf.getDouble(keyYaw);
 		else
 			valYaw = defSpawn.getYaw();
+		if (gSpawnsConf.isString(keySpawnWorld))
+			valSpawnWorld = gSpawnsConf.getString(keySpawnWorld);
+		else
+			valSpawnWorld = defSpawn.getSpawnWorld();
 		if (gSpawnsConf.isBoolean(keyBedRespawn))
 			valBedRespawn = gSpawnsConf.getBoolean(keyBedRespawn);
 		else
@@ -195,16 +211,36 @@ public final class ConfigManager {
 		else
 			valTpToSpawnOnJoin = defSpawn.getTpToSpawnOnJoin();
 
-		return new HSpawn(valX, valY, valZ, valPitch, valYaw, world, valBedRespawn, valTpToSpawnOnJoin);
+		return new HSpawn(valX, valY, valZ, valPitch, valYaw, valSpawnWorld, world, valBedRespawn, valTpToSpawnOnJoin);
 	}
 
 	public HSpawn getSpawn(Player player) {
 		String playerName = player.getName();
-		String worldName = player.getWorld().getName();
-		String group = gPlugin.getPlayerGroup(worldName, playerName);
-
+		String world = player.getWorld().getName();
+		String group = gPlugin.getPlayerGroup(world, playerName);
 		if (group == null)
 			group = DEFAULT_GROUP;
+
+		ArrayList<String> worldsFound = new ArrayList<String>();
+		HSpawn originalSpawn = getSpawnNonRedirected(group, world);
+		HSpawn spawn = originalSpawn;
+		while (!spawn.getSpawnWorld().equalsIgnoreCase(spawn.getFromWorld())) {
+			if (worldsFound.contains(spawn.getFromWorld())) {
+				gPlugin.getLogger().warning("Recursive spawns found for group " + group + " in world " + world + ".");
+				gPlugin.getLogger().warning("Please make sure specified spawn_worlds don't loop back.");
+				gPlugin.getLogger().warning(player.getName() + " will spawn in the same world as he/she already is.");
+				player.sendMessage(ChatColor.RED + "You will spawn in the same world, because of recursive spawns.");
+				return originalSpawn;
+			}
+			worldsFound.add(spawn.getFromWorld());
+			world = spawn.getSpawnWorld();
+			group = gPlugin.getPlayerGroup(world, playerName);
+			spawn = getSpawnNonRedirected(group, world);
+		}
+		return spawn;
+	}
+
+	private HSpawn getSpawnNonRedirected(String group, String worldName) {
 		HWorld world = gWorlds.get(worldName);
 		if (world == null) {
 			gPlugin.getLogger().warning("[BUG] World not added: " + worldName);
@@ -217,7 +253,6 @@ public final class ConfigManager {
 			gPlugin.getLogger().warning("[BUG] No spawns found for world " + worldName);
 			return null;
 		}
-
 		return spawn;
 	}
 
@@ -226,21 +261,25 @@ public final class ConfigManager {
 	}
 
 	public boolean setSpawn(String group, HSpawn spawn) {
-		spawn.setBedRespawn(getDefaultSpawn(spawn.getWorld()).getBedRespawn());
-		HWorld hworld = gWorlds.get(spawn.getWorld());
+		spawn.setBedRespawn(getDefaultSpawn(spawn.getFromWorld()).getBedRespawn());
+		spawn.setTpToSpawnOnJoin(getDefaultSpawn(spawn.getFromWorld()).getTpToSpawnOnJoin());
+		HWorld hworld = gWorlds.get(spawn.getFromWorld());
 		if (hworld == null)
 			return false;
 		hworld.getGroupSpawns().put(group, spawn);
-		String keyX = String.format(KEY_FORMAT, spawn.getWorld(), group, "x");
-		String keyY = String.format(KEY_FORMAT, spawn.getWorld(), group, "y");
-		String keyZ = String.format(KEY_FORMAT, spawn.getWorld(), group, "z");
-		String keyPitch = String.format(KEY_FORMAT, spawn.getWorld(), group, "pitch");
-		String keyYaw = String.format(KEY_FORMAT, spawn.getWorld(), group, "yaw");
+		String fromWorld = spawn.getFromWorld();
+		String keyX = String.format(KEY_FORMAT, fromWorld, group, "x");
+		String keyY = String.format(KEY_FORMAT, fromWorld, group, "y");
+		String keyZ = String.format(KEY_FORMAT, fromWorld, group, "z");
+		String keyPitch = String.format(KEY_FORMAT, fromWorld, group, "pitch");
+		String keyYaw = String.format(KEY_FORMAT, fromWorld, group, "yaw");
+		String keySpawnWorld = String.format(KEY_FORMAT, fromWorld, group, "spawn_world");
 		gSpawnsConf.set(keyX, spawn.getX());
 		gSpawnsConf.set(keyY, spawn.getY());
 		gSpawnsConf.set(keyZ, spawn.getZ());
 		gSpawnsConf.set(keyPitch, (double) spawn.getPitch());
 		gSpawnsConf.set(keyYaw, (double) spawn.getYaw());
+		gSpawnsConf.set(keySpawnWorld, spawn.getSpawnWorld());
 		gChange = true;
 		saveSpawns();
 		return true;
@@ -278,4 +317,9 @@ public final class ConfigManager {
 		}
 	}
 
+	private String getAssumedSpawnWorld(String world) {
+		if (world.equalsIgnoreCase("world_nether") || world.equalsIgnoreCase("world_the_end"))
+			return "world";
+		return world;
+	}
 }

@@ -14,8 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class HSpawnPlugin extends JavaPlugin {
 
 	private static final int SERVER_MODS_API_ID = 78173;
+	private static final String COMMAND = "spawn";
 
-	private final ConfigManager gConfigManager = new ConfigManager(this);
+	private final SpawnManager gSpawnManager = new SpawnManager(this);
 	private final HCommandExecutor gCommandExecutor = new HCommandExecutor(this);
 	private final PlayerListener gPlayerListener = new PlayerListener(this);
 
@@ -26,7 +27,7 @@ public final class HSpawnPlugin extends JavaPlugin {
 
 	@Override
 	public void onLoad() {
-		gConfigManager.load();
+		gSpawnManager.load();
 	}
 
 	@Override
@@ -36,11 +37,11 @@ public final class HSpawnPlugin extends JavaPlugin {
 			getPluginLoader().disablePlugin(this);
 			return;
 		}
-		gConfigManager.reload();
+		gSpawnManager.reload();
 		hookIntoVault();
 
 		getServer().getPluginManager().registerEvents(gPlayerListener, this);
-		getCommand("spawn").setExecutor(gCommandExecutor);
+		getCommand(COMMAND).setExecutor(gCommandExecutor);
 
 		if (gCheckForUpdates)
 			new Updater(this, SERVER_MODS_API_ID, getFile(), Updater.UpdateType.DEFAULT, false);
@@ -48,7 +49,7 @@ public final class HSpawnPlugin extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		gConfigManager.saveSpawns();
+		gSpawnManager.saveSpawns();
 	}
 
 	private boolean hookIntoVault() {
@@ -89,8 +90,8 @@ public final class HSpawnPlugin extends JavaPlugin {
 		return gSafeY;
 	}
 
-	public ConfigManager getConfigManager() {
-		return gConfigManager;
+	public SpawnManager getConfigManager() {
+		return gSpawnManager;
 	}
 
 	public Location makeYSafe(Location location) {

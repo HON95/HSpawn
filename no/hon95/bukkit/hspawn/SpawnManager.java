@@ -17,12 +17,11 @@ public final class SpawnManager {
 
 	private static final String DEFAULT_GROUP = "default";
 	private static final String KEY_FORMAT = "%s.%s.%s";
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 	private static final String CONFIG_HEADER = "Configuration file for hSpawn.";
 	private static final String SPAWNS_HEADER = "Spawn configuration file for hSpawn."
-			+ LINE_SEPARATOR + "This file is grouped into worlds and then groups."
-			+ LINE_SEPARATOR + "The group ID needs to be the same as in your permission plugin."
-			+ LINE_SEPARATOR + "'default' is the default group and is used if none of the others match.";
+			+ "\nThis file is grouped into worlds and then groups."
+			+ "\nThe group ID needs to be the same as in your permission plugin."
+			+ "\n'default' is the default group and is used if none of the others match.";
 
 	private final HSpawnPlugin gPlugin;
 	private final File gConfigFile;

@@ -33,6 +33,7 @@ public final class HCommandExecutor implements CommandExecutor {
 		gPlugin = plugin;
 	}
 
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (!command.getName().equalsIgnoreCase(COMMAND))
 			return false;
@@ -104,7 +105,13 @@ public final class HCommandExecutor implements CommandExecutor {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
-				Player player = Bukkit.getPlayer(uuid);
+				Player player;
+				try {
+					player = Bukkit.getPlayer(uuid);
+				} catch (NoSuchMethodError err) {
+					// For CB 1.7.2-R0.3 support
+					player = Bukkit.getPlayer(name);
+				}
 				if (player == null)
 					sender.sendMessage(ChatColor.RED + "Player " + args[0] + " not found.");
 				else
